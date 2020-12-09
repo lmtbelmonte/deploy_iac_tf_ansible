@@ -1,6 +1,6 @@
-# Luis merino : curso de Linnux academy deployment in aws with terraform and ansible
+# Luis merino : Despliegue en aws con terraform y ansible
 # 
-# Creacion de los los diferentes recursos en las dos regiones con los 2 alias de aws
+# Creacion de los los diferentes recursos de red en las dos regiones con los 2 alias de aws
 
 # Internet gateways  
 # Primero en la master

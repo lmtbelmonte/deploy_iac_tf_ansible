@@ -1,3 +1,5 @@
+# Luis merino : Despliegue en aws con terraform y ansible
+# 
 # Creacion de los security groups for the LB solo permitido TCP/80, TCP/443
 # outbound access
 resource "aws_security_group" "lb-sg" {
@@ -46,8 +48,8 @@ resource "aws_security_group" "jenkins-sg" {
   }
   ingress {
     description     = "Permitir trafico tcp/8080 desde cualquier sitio"
-    from_port       = 8080
-    to_port         = 8080
+    from_port       = var.webserver-port
+    to_port         = var.webserver-port
     protocol        = "tcp"
     security_groups = [aws_security_group.lb-sg.id]
   }
