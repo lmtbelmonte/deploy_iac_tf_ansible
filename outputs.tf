@@ -17,5 +17,10 @@ output "Jenkins-Worker-Public-Ip" {
 
 # Ahora es necesario sacar la dns del balanceador para acceder app
 output "LB-DNS-NAME" {
-  value = aws_lb.application-lb.dns_name
+  value = aws_lb.application_lb.dns_name
+}
+
+# Sacamos tambien la dns del alias que hemos creado en el route
+output "url" {
+  value = aws_route53_record.jenkins.fqdn
 }
