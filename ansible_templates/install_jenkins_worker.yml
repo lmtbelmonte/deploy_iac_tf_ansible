@@ -1,0 +1,45 @@
+---
+- hosts: "{{passed_in_hosts}}"
+  become: yes
+  remote_user: ec2-user
+  become_user: root
+  tasks:
+    - name: Generar el par de claves ssh
+      openssh_keypair:
+        path: /home/ec2-user/.ssh/id_rsa
+        type: rsa
+        size: 2048
+        group: ec2-user
+        owner: ec2-user
+    - name: Añadimos nuestra propia clave al authorized_keys
+      shell: "cat /home/ec2-user/.ssh/id_rsa.pub >> /home/ec2-user/.ssh/authorized_keys && chmod 600 /home/ec2-user/.ssh/authorized_keys"
+    - name: copiamos el template de jinja a al jenkins worker
+      vars: 
+        ipv4: "{{ ansible_default_ipv4.address }}"
+      template:
+        src: node.j2
+        dest: /home/ec2-user/node.xml
+        owner: ec2-user
+        mode: '644'  
+    - name: Hay que leer la clave privada id_rsa
+      slurp: /home/ec2-user/.ssh/id_rsa
+      register: pkey
+    - name: Copiar creds.xml y creamos los credenciales para jenkins
+      vars:
+        priv_key: "{{ pkey['content'] | b64decode }}"
+        ipv4: "{{ ansible_default_ipv4.address }}"
+      template:
+        src: cred-privkey.j2
+        dest: /home/ec2-user/creds.xml
+    - name: Instalamos las dependencias
+      yum:
+        name: "{{ package }}"
+      vars:
+        package:
+        - wget
+        - java-1.8.0-openjdk-devel
+        - git
+    
+
+    
+

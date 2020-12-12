@@ -1,0 +1,61 @@
+---
+- hosts: "{{ passed_in_hosts }}"
+  become: yes
+  remote_user: ec2-user
+  become_user: root
+  tasks:
+    - name: Instalacion de las dependencias
+      yum:
+        name: "{{ package }}"
+        state: present
+      vars:
+        package:
+        - wget
+        - java-1.8.0-openjdk-dlevel
+        - git
+    - name: clonamos el repo previamente configurado
+      git:
+        repo: https://github.com/linuxacademy/content-terraform-jenkins.git
+        dest: /tmp/jenkins
+    - name: Setup del repo de Jenkins
+      get_url:
+        url: https://pkg.jenkins.io/redhat/jenkins.repo
+        dest: /etc/yum.repos.d/jenkins.repo
+    - name: Importamos la clave GPG del repo de Jenkins
+      rpm_key:
+        state: present
+        key: https://pkg.jenkins.io/redhat/jenkins.io.key
+    - name: Instalamos Jenkins
+      yum:
+        name: jenkins
+        state: present
+    - name: Paramos temporalmente Jenkins
+      service:
+        name: jenkins
+        state: stopped
+    - name:  Borramos el dir default de jenkins
+      file:
+        state: absent
+        path: /var/lib/jenkins
+    - name: copiamos nuestro jenkins clonado al /var/lib/jenkins
+      copy:
+        remote_src: yes
+        src: /tmp/jenkins/jenkins
+        dest: /var/lib
+    - name: Restauramos el ownership de jenkins sobre el dir /var/lib/jenkins
+      file:
+        path: /var/lib/jenkins
+        state: directory
+        recurse: yes
+        owner: jenkins
+    - name: Arrancamos Jenkins
+      service:
+        name: jenkins
+        state: started
+        enabled: yes
+    - name: Espera hasta que el jenkins este ya arrancado
+      shell: result_first=1; while [[ $result_first != 0 ]]; do if [[ `grep 'Jenkins is fully up and running' /var/log/jenkins/jenkins.log` ]];then result_first=0;else sleep 4;fi;done
+      register: result
+      until: result.rc == 0
+
+
